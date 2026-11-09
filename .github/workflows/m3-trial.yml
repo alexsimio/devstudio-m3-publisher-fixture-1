@@ -1,0 +1,30 @@
+name: M3 Trial Fixture
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  m3-trial:
+    name: m3-trial
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '24.22.2'
+      - name: Run fixture tests
+        run: node --test greet.test.mjs
+
