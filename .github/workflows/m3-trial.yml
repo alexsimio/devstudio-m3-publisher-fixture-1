@@ -1,30 +1,25 @@
-name: M3 Trial Fixture
+# PROPOSED ARTIFACT (issue #141). NOT APPLIED to any repository and NOT AUTHORIZED.
+# Lives under docs/, so it never runs in DevStudio's own CI. A future experiment would copy it to
+# .github/workflows/m3-trial.yml in the disposable fixture repository, under a new registration
+# revision that pins this file's blob as `trustedWorkflow.blob` and the callee's blob beside it.
+#
+# The trusted caller. Its only job calls one relative reusable workflow, which GitHub takes from
+# the same commit as this file. For `pull_request`, that commit is GITHUB_SHA, the PR merge-branch
+# commit. Jobs that call a reusable workflow cannot set `runs-on`, `steps` or `timeout-minutes`;
+# the bound lives in the callee.
+name: m3-trial
 
 on:
+  # Default activity types only (opened, synchronize, reopened). No `pull_request_target`,
+  # `workflow_dispatch`, `schedule` or `push` trigger.
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
 
+# Read-only token for the whole run. The callee cannot raise it.
 permissions:
   contents: read
 
 jobs:
   m3-trial:
-    name: m3-trial
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-          fetch-depth: 1
-          submodules: false
-          lfs: false
-      - name: Set up Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: '24.22.2'
-      - name: Run fixture tests
-        run: node --test greet.test.mjs
-
+    # Relative, same-repository path: no owner, repository or `@ref`, so it cannot name another
+    # repository or a mutable ref. No `with:` inputs and no `secrets:` (never `secrets: inherit`).
+    uses: ./.github/workflows/m3-trial-check.yml

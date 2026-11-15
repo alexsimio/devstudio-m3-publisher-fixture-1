@@ -1,0 +1,39 @@
+# PROPOSED ARTIFACT (issue #141). NOT APPLIED to any repository and NOT AUTHORIZED.
+# Lives under docs/, so it never runs in DevStudio's own CI. A future experiment would copy it to
+# .github/workflows/m3-trial-check.yml in the disposable fixture repository, with its blob pinned
+# in the registration beside the caller's.
+#
+# The callee. It can only be called (`workflow_call`), takes no inputs or secrets, and runs one
+# bounded job on a standard GitHub-hosted runner. It executes no candidate code: it checks out the
+# tested merge without persisting credentials and compares one file's Git blob id with the
+# scenario's fixed bytes (`TRIAL-PUBLISHER.md`, see m3-128-publisher-fixture-notes.md).
+name: m3-trial-check
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # In the jobs API this job is expected to appear as `m3-trial / check` (assumption A5 in the
+    # design packet); the registration's `requiredJob` would name whatever the experiment records.
+    name: check
+    runs-on: ubuntu-24.04
+    # The two-minute bound. A job that exceeds it is cancelled by GitHub and concludes
+    # `cancelled`, which the verifier refuses (`required-job-not-successful`).
+    timeout-minutes: 2
+    steps:
+      - name: Checkout tested merge
+        # Same pinned action and version DevStudio's own CI already reviewed (.github/workflows/pr-ci.yml).
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Check fixture contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git hash-object TRIAL-PUBLISHER.md)" = "6958fcc5c26c2ed02d46899eacc347474c44ef14"
